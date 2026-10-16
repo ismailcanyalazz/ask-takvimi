@@ -32,8 +32,18 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Android SDK hazırla
-        uses: android-actions/setup-android@v3
+      - name: Android SDK paketlerini hazırla
+        run: |
+          set -e
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          SDKMANAGER="$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
+          if [ -z "$SDKMANAGER" ]; then SDKMANAGER="$(command -v sdkmanager || true)"; fi
+          if [ -z "$SDKMANAGER" ]; then
+            echo "sdkmanager bulunamadı"; exit 1
+          fi
+          echo "sdkmanager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: gradlew'e çalışma izni ver
         run: chmod +x ./gradlew
