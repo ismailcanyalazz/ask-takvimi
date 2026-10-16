@@ -1,0 +1,60 @@
+name: APK derle
+
+# Bu iş akışı, projeyi GitHub'a yükledikten sonra APK'yı senin yerine derler.
+# Bilgisayarına hiçbir şey kurman gerekmez.
+#
+# Nasıl çalışır:
+#  1. Projeyi GitHub'a yükle (public veya private fark etmez).
+#  2. Depodaki "Actions" sekmesine gir.
+#  3. Soldan "APK derle" > sağdan "Run workflow" de (veya herhangi bir değişiklik gönder).
+#  4. İş bitince sayfanın altındaki "Artifacts" bölümünden
+#     "AskTakvimi-APK" dosyasını indir, zip'ten çıkar ve telefona kur.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Testleri çalıştır ve APK üret
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: Java 17 kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Android SDK hazırla
+        uses: android-actions/setup-android@v3
+
+      - name: gradlew'e çalışma izni ver
+        run: chmod +x ./gradlew
+
+      - name: Birim testleri çalıştır
+        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
+
+      - name: Test raporunu yükle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-raporu
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+
+      - name: APK derle
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: APK'yı yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: AskTakvimi-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

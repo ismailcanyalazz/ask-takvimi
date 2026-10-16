@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Aşk Takvimi</string>
+    <string name="notification_channel_name">Regl hatırlatmaları</string>
+    <string name="notification_channel_desc">Regl dönemin yaklaşırken gönderilen nazik hatırlatmalar</string>
+</resources>

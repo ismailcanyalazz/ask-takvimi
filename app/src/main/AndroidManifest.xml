@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Android 13+ için bildirim izni. Uygulama çalışırken kullanıcıdan istenir. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Cihaz yeniden başladığında planlanan hatırlatmaları yeniden kurmak için. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Hatırlatmaların gün içinde doğru saatte gelmesi için kesin alarm izni.
+         Verilmezse uygulama otomatik olarak esnek (yaklaşık) alarma düşer, çökmez. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <!-- Parmak izi / yüz ile uygulama kilidi (isteğe bağlı). -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <!-- İnternet izni BİLİNÇLİ OLARAK YOKTUR.
+         Uygulama hiçbir veriyi hiçbir yere gönderemez; veriler yalnızca cihazda kalır. -->
+
+    <application
+        android:name=".AskTakvimiApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AskTakvimi">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.AskTakvimi"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Zamanlanmış hatırlatmayı alıp bildirimi gösteren alıcı.
+             Yalnızca uygulamanın kendi alarmından tetiklenir, bu yüzden exported=false. -->
+        <receiver
+            android:name=".notifications.ReminderReceiver"
+            android:exported="false" />
+
+        <!-- Cihaz açıldığında ve saat/zaman dilimi değiştiğinde alarmları yeniden kurar.
+             Sistem yayınını aldığı için exported=true olmak zorundadır. -->
+        <receiver
+            android:name=".notifications.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>
