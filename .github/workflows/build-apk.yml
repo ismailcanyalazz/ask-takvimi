@@ -20,6 +20,8 @@ jobs:
   build:
     name: Testleri çalıştır ve APK üret
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Kodu al
@@ -68,3 +70,37 @@ jobs:
           name: AskTakvimi-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      # APK'yı depodaki dist/ klasörüne de koyar; böylece Actions'a girmeden
+      # doğrudan depo sayfasından indirilebilir.
+      - name: APK'yı depoya işle
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -e
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk dist/AskTakvimi.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f dist/AskTakvimi.apk
+          if git diff --cached --quiet; then
+            echo "APK değişmemiş, işlenecek bir şey yok."
+          else
+            git commit -m "APK güncellendi [skip ci]"
+            git push
+          fi
+
+      # Ayrıca indirilebilir bir sürüm (Release) oluşturur.
+      - name: Sürüm olarak yayınla
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          cp app/build/outputs/apk/debug/app-debug.apk AskTakvimi.apk
+          if gh release view apk-son >/dev/null 2>&1; then
+            gh release upload apk-son AskTakvimi.apk --clobber
+          else
+            gh release create apk-son AskTakvimi.apk \
+              --title "Aşk Takvimi — son APK" \
+              --notes "Telefona kurulabilen güncel APK. İndir, dokun, yükle."
+          fi
